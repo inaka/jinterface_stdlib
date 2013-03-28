@@ -1,8 +1,8 @@
-{application, 'jinterface-stdlib',
+{application, 'jinterface_stdlib',
  [
   {description, "Erlang stdlib implementation on Java, based on JInterface"},
   {vsn, "0.1"},
-  {id, "jinterface-stdlib"},
+  {id, "jinterface_stdlib"},
   {registered,   []},
   {applications, []},
   {mod, {no_mod, []}},
