@@ -4,3 +4,13 @@
 *.jar
 *.war
 *.ear
+
+.classpath
+*.plt
+doc
+ebin
+.DS_Store
+log
+logs
+erl_crash.dump
+*.log

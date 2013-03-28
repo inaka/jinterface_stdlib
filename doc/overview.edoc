@@ -1,0 +1,12 @@
+@author Fernando Benavides <elbrujohalcon@inaka.net>
+@copyright 2013, Inaka Labs
+@version 1.0
+@title jinterface-stdlib
+
+@doc
+
+== About ==
+Erlang stdlib implementation on Java, based on JInterface
+
+== Usage ==
+To use it just include priv/jinterface-stdlib.jar in your classpath as you do with the erlang provided jinterface.jar
