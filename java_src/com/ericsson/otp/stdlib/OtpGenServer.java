@@ -3,12 +3,13 @@ package com.ericsson.otp.stdlib;
 import java.util.logging.Logger;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
-import com.ericsson.otp.erlang.OtpErlangDecodeException;
 import com.ericsson.otp.erlang.OtpErlangException;
 import com.ericsson.otp.erlang.OtpErlangExit;
+import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangPid;
 import com.ericsson.otp.erlang.OtpErlangRef;
+import com.ericsson.otp.erlang.OtpErlangString;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 import com.ericsson.otp.erlang.OtpMbox;
 import com.ericsson.otp.erlang.OtpNode;
@@ -22,7 +23,7 @@ import com.ericsson.otp.erlang.OtpNode;
  *      registered name from a linked Erlang node, you can use gen_server
  *      functions (e.g. gen_server:call/2) with it.
  */
-public abstract class OtpGenServer {
+public abstract class OtpGenServer extends OtpSysProcess {
 	private static final Logger	jlog			= Logger.getLogger(OtpGenServer.class
 														.getName());
 	private static final long	DEFAULT_TIMEOUT	= 5000;
@@ -30,7 +31,6 @@ public abstract class OtpGenServer {
 	 * @doc Use it as an equivalent to Erlang's infinity atom
 	 */
 	public static final long	INFINITY		= 0;
-	private OtpMbox				mbox;
 
 	/**
 	 * Equivalent to
@@ -218,65 +218,47 @@ public abstract class OtpGenServer {
 		host.createMbox().send(to, tuple);
 	}
 
-	/**
-	 * Default anonymous constructor
-	 * 
-	 * @param host
-	 *            Node where the gen_server will lives
-	 */
+	/**********************************************************************************************/
+
 	protected OtpGenServer(OtpNode host) {
-		mbox = host.createMbox();
+		super(host);
 	}
 
-	/**
-	 * Default named constructor
-	 * 
-	 * @param host
-	 *            Node where the gen_server will lives
-	 * @param name
-	 *            Name to which the gen_server will be registered
-	 */
 	protected OtpGenServer(OtpNode host, String name) {
-		mbox = host.createMbox(name);
+		super(host, name);
 	}
 
-	protected final OtpErlangPid getSelf() {
-		return mbox.self();
-	}
-
-	/**
-	 * Gets the server running
-	 * 
-	 * @throws OtpErlangException
-	 *             if something fails :)
-	 */
-	public void start() throws OtpErlangException {
-		loop();
-		jlog.fine("...leaving");
-	}
-
-	private void loop() throws OtpErlangDecodeException, OtpErlangException,
-			OtpErlangExit {
+	@Override
+	protected void loop() throws OtpErlangException {
 		boolean running = true;
 		while (running) {
-			OtpErlangObject o = mbox.receive();
+			OtpErlangObject o = this.getMbox().receive();
 			jlog.finer("Received Request: " + o);
 			running = decodeMsg(o);
 		}
-	}
+	};
 
-	private boolean decodeMsg(OtpErlangObject message) throws OtpErlangException,
-			OtpErlangExit {
+	private boolean decodeMsg(OtpErlangObject message)
+			throws OtpErlangException, OtpErlangExit {
 		try {
 			if (message instanceof OtpErlangTuple) {
 				OtpErlangTuple msg = (OtpErlangTuple) message;
 				OtpErlangAtom kind = (OtpErlangAtom) msg.elementAt(0);
-				if (kind.atomValue().equals("$gen_call")
+				if (kind.atomValue().equals("system") && msg.arity() == 3) {
+					OtpErlangTuple from = (OtpErlangTuple) msg.elementAt(1);
+					OtpErlangObject req = msg.elementAt(2);
+					handleSystemMessage(req, from);
+				} else if (kind.atomValue().equals("$gen_call")
 						&& ((OtpErlangTuple) message).arity() == 3) {
 					OtpErlangTuple from = (OtpErlangTuple) msg.elementAt(1);
 					OtpErlangObject cmd = msg.elementAt(2);
-					OtpErlangObject reply = handleCall(cmd, from);
-					reply(from, reply);
+					try {
+						OtpErlangObject reply = handleCall(cmd, from);
+						reply(from, reply);
+					} catch (OtpStopReplyException ose) {
+						reply(from, ose.getResponse());
+						return false;
+					}
 				} else if (kind.atomValue().equals("$gen_cast")
 						&& ((OtpErlangTuple) message).arity() == 2) {
 					OtpErlangObject cmd = msg.elementAt(1);
@@ -287,55 +269,50 @@ public abstract class OtpGenServer {
 			} else {
 				handleInfo(message);
 			}
-			return true;
 		} catch (OtpErlangExit oee) {
 			OtpErlangObject reason = oee.reason();
 			jlog.warning("Linked process exited. Reason: " + reason);
 			try {
 				handleExit(oee);
-				return true;
 			} catch (OtpStopException ose) {
-				jlog.fine("Server stopping normally");
 				return false;
 			}
 		} catch (OtpContinueException ose) {
-			return true;
 		} catch (OtpStopException ose) {
-			jlog.fine("Server stopping normally");
 			return false;
 		}
+		return true;
+	}
+
+	@Override
+	protected final OtpErlangList getMiscStatus() {
+		OtpErlangTuple header = new OtpErlangTuple(new OtpErlangObject[] {
+				new OtpErlangAtom("header"),
+				new OtpErlangString("Status for generic server "
+						+ this.getMbox().getName()) });
+		OtpErlangTuple data = new OtpErlangTuple(
+				new OtpErlangObject[] {
+						new OtpErlangAtom("data"),
+						new OtpErlangList(
+								new OtpErlangObject[] { getSpecificStatus() }) });
+		OtpErlangList miscStatus = new OtpErlangList(new OtpErlangObject[] {
+				header, data });
+		return miscStatus;
 	}
 
 	/**
-	 * Override this function if you want to trap exits
+	 * Override to add specific information to get_status calls
 	 * 
-	 * @param oee
-	 *            Exit reason
-	 * @throws OtpErlangExit
-	 *             If you want to re-throw the exception
-	 * @throws OtpStopException
-	 *             If you want to stop the server
+	 * @return a list of specific information to be included in the process
+	 *         status description
 	 */
-	protected void handleExit(OtpErlangExit oee) throws OtpErlangExit,
-			OtpStopException {
-		throw oee;
+	protected OtpErlangList getSpecificStatus() {
+		return new OtpErlangList(new OtpErlangTuple(new OtpErlangObject[] {
+				new OtpErlangString("State"),
+				new OtpErlangString(this.toString()) }));
 	}
 
-	/**
-	 * Returns a reply to the calling process
-	 * 
-	 * @param from
-	 *            The calling process reference
-	 * @param reply
-	 *            Response to send
-	 */
-	protected void reply(OtpErlangTuple from, OtpErlangObject reply) {
-		OtpErlangPid to = (OtpErlangPid) from.elementAt(0);
-		OtpErlangRef tag = (OtpErlangRef) from.elementAt(1);
-		OtpErlangTuple tuple = new OtpErlangTuple((new OtpErlangObject[] { tag,
-				reply }));
-		mbox.send(to, tuple);
-	}
+	/**********************************************************************************************/
 
 	protected abstract OtpErlangObject handleCall(OtpErlangObject cmd,
 			OtpErlangTuple from) throws OtpStopException, OtpContinueException,
