@@ -250,10 +250,10 @@ public abstract class OtpGenServer extends OtpSysProcess {
 					}
 				}
 			}
+			terminate(null);
 		} catch (OtpErlangException oee) {
 			terminate(oee);
 		}
-		terminate(null);
 	};
 
 	private boolean decodeMsg(OtpErlangObject message)

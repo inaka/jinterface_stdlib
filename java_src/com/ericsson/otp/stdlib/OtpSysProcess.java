@@ -21,6 +21,7 @@ public abstract class OtpSysProcess {
 	private static final Logger	jlog	= Logger.getLogger(OtpSysProcess.class
 												.getName());
 	private OtpMbox				mbox;
+	private OtpNode				host;
 
 	/**
 	 * Default anonymous constructor
@@ -41,6 +42,7 @@ public abstract class OtpSysProcess {
 	 *            Name to which the gen_server will be registered
 	 */
 	protected OtpSysProcess(OtpNode host, String name) {
+		this.host = host;
 		this.mbox = host.createMbox(name);
 	}
 
@@ -48,7 +50,11 @@ public abstract class OtpSysProcess {
 		return mbox.self();
 	}
 
-	protected OtpMbox getMbox() {
+	protected final OtpNode getHost() {
+		return host;
+	}
+
+	protected final OtpMbox getMbox() {
 		return this.mbox;
 	}
 
