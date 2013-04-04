@@ -22,28 +22,34 @@ public abstract class OtpSysProcess {
 												.getName());
 	private OtpMbox				mbox;
 	private OtpNode				host;
+	private String				name;
 
 	/**
 	 * Default anonymous constructor
 	 * 
 	 * @param host
-	 *            Node where the gen_server will lives
+	 *            Node where the process will live
 	 */
 	protected OtpSysProcess(OtpNode host) {
-		this.mbox = host.createMbox();
+		this.host = host;
+		this.name = null;
 	}
 
 	/**
 	 * Default named constructor
 	 * 
 	 * @param host
-	 *            Node where the gen_server will lives
+	 *            Node where the process will live
 	 * @param name
-	 *            Name to which the gen_server will be registered
+	 *            Name to which the process will be registered
 	 */
 	protected OtpSysProcess(OtpNode host, String name) {
 		this.host = host;
-		this.mbox = host.createMbox(name);
+		this.name = name;
+	}
+
+	protected final String getName() {
+		return name;
 	}
 
 	protected final OtpErlangPid getSelf() {
@@ -60,15 +66,14 @@ public abstract class OtpSysProcess {
 
 	/**
 	 * Gets the process running
+	 * 
+	 * @throws OtpAlreadyStartedException
+	 *             if a process with this name is already running
+	 * @throws OtpErlangExit
+	 *             if this process can't be linked to the caller
 	 */
-	public final void start() {
-		new Thread(this.mbox.getName()) {
-			@Override
-			public void run() {
-				loop();
-				jlog.fine("...leaving");
-			}
-		}.start();
+	public final void start() throws OtpAlreadyStartedException, OtpErlangExit {
+		start(null);
 	}
 
 	/**
@@ -78,10 +83,35 @@ public abstract class OtpSysProcess {
 	 *            Process that starts this one
 	 * @throws OtpErlangExit
 	 *             if this process can't be linked to the caller
+	 * @throws OtpAlreadyStartedException
+	 *             if a process with the same name is already running
 	 */
-	public final void startLink(OtpErlangPid caller) throws OtpErlangExit {
-		this.mbox.link(caller);
-		start();
+	public final void startLink(OtpErlangPid caller) throws OtpErlangExit,
+			OtpAlreadyStartedException {
+		start(caller);
+	}
+
+	private void start(final OtpErlangPid caller)
+			throws OtpAlreadyStartedException, OtpErlangExit {
+		final OtpMbox mbox;
+		if (this.name == null) {
+			mbox = this.host.createMbox();
+		} else if (this.host.whereis(this.name) == null) {
+			mbox = this.host.createMbox(this.name);
+		} else {
+			throw new OtpAlreadyStartedException(this.name);
+		}
+		this.mbox = mbox;
+		if (caller != null)
+			mbox.link(caller);
+		new Thread(this.name) {
+			@Override
+			public void run() {
+				loop();
+				jlog.fine("...leaving");
+				mbox.close();
+			}
+		}.start();
 	}
 
 	protected void handleSystemMessage(OtpErlangObject req, OtpErlangTuple from)
@@ -209,6 +239,11 @@ public abstract class OtpSysProcess {
 	 */
 	protected void handleExit(OtpErlangExit oee) throws OtpErlangExit,
 			OtpStopException {
+		if(oee.reason() instanceof OtpErlangAtom) {
+			if (((OtpErlangAtom) oee.reason()).atomValue() == "normal") {
+				return;
+			}
+		}
 		throw oee;
 	}
 }

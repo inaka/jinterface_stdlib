@@ -242,7 +242,7 @@ public abstract class OtpGenServer extends OtpSysProcess {
 					running = decodeMsg(o);
 				} catch (OtpErlangExit oee) {
 					OtpErlangObject reason = oee.reason();
-					jlog.warning("Linked process exited. Reason: " + reason);
+					jlog.info("Linked process exited. Reason: " + reason);
 					try {
 						handleExit(oee);
 					} catch (OtpStopException ose) {
@@ -299,7 +299,7 @@ public abstract class OtpGenServer extends OtpSysProcess {
 		OtpErlangTuple header = new OtpErlangTuple(new OtpErlangObject[] {
 				new OtpErlangAtom("header"),
 				new OtpErlangString("Status for generic server "
-						+ this.getMbox().getName()) });
+						+ this.getName()) });
 		OtpErlangTuple data = new OtpErlangTuple(
 				new OtpErlangObject[] {
 						new OtpErlangAtom("data"),
@@ -320,6 +320,13 @@ public abstract class OtpGenServer extends OtpSysProcess {
 		return new OtpErlangList(new OtpErlangTuple(new OtpErlangObject[] {
 				new OtpErlangString("State"),
 				new OtpErlangString(this.toString()) }));
+	}
+
+	/**
+	 * @return the process PID
+	 */
+	public final OtpErlangPid getPid() {
+		return this.getSelf();
 	}
 
 	/**********************************************************************************************/
