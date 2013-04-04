@@ -232,17 +232,32 @@ public abstract class OtpGenServer extends OtpSysProcess {
 	}
 
 	@Override
-	protected void loop() throws OtpErlangException {
+	protected void loop() {
 		boolean running = true;
-		while (running) {
-			OtpErlangObject o = this.getMbox().receive();
-			jlog.finer("Received Request: " + o);
-			running = decodeMsg(o);
+		try {
+			while (running) {
+				try {
+					OtpErlangObject o = this.getMbox().receive();
+					jlog.finer("Received Request: " + o);
+					running = decodeMsg(o);
+				} catch (OtpErlangExit oee) {
+					OtpErlangObject reason = oee.reason();
+					jlog.warning("Linked process exited. Reason: " + reason);
+					try {
+						handleExit(oee);
+					} catch (OtpStopException ose) {
+						running = false;
+					}
+				}
+			}
+		} catch (OtpErlangException oee) {
+			terminate(oee);
 		}
+		terminate(null);
 	};
 
 	private boolean decodeMsg(OtpErlangObject message)
-			throws OtpErlangException, OtpErlangExit {
+			throws OtpErlangException {
 		try {
 			if (message instanceof OtpErlangTuple) {
 				OtpErlangTuple msg = (OtpErlangTuple) message;
@@ -271,14 +286,6 @@ public abstract class OtpGenServer extends OtpSysProcess {
 				}
 			} else {
 				handleInfo(message);
-			}
-		} catch (OtpErlangExit oee) {
-			OtpErlangObject reason = oee.reason();
-			jlog.warning("Linked process exited. Reason: " + reason);
-			try {
-				handleExit(oee);
-			} catch (OtpStopException ose) {
-				return false;
 			}
 		} catch (OtpContinueException ose) {
 		} catch (OtpStopException ose) {
@@ -326,4 +333,6 @@ public abstract class OtpGenServer extends OtpSysProcess {
 
 	protected abstract void handleInfo(OtpErlangObject cmd)
 			throws OtpStopException;
+
+	protected abstract void terminate(OtpErlangException oee);
 }
