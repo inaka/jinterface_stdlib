@@ -15,20 +15,21 @@ import com.ericsson.otp.erlang.OtpMbox;
 import com.ericsson.otp.erlang.OtpNode;
 
 /**
+ * An abstract class for implementing a gen_server-like process. It should work
+ * as OTP gen_server. The methods you would usually implement on the callback
+ * module are abstract here so you have to implement it when inheriting from
+ * this class. Then, if you get hold of this process PID or registered name from
+ * a linked Erlang node, you can use gen_server functions (e.g.
+ * gen_server:call/2) with it.
+ * 
  * @author Fernando Benavides <elbrujohalcon@inaka.net>
- * @doc An abstract class for implementing a gen_server-like process. It should
- *      work as OTP gen_server. The methods you would usually implement on the
- *      callback module are abstract here so you have to implement it when
- *      inheriting from this class. Then, if you get hold of this process PID or
- *      registered name from a linked Erlang node, you can use gen_server
- *      functions (e.g. gen_server:call/2) with it.
  */
 public abstract class OtpGenServer extends OtpSysProcess {
 	private static final Logger	jlog			= Logger.getLogger(OtpGenServer.class
 														.getName());
 	private static final long	DEFAULT_TIMEOUT	= 5000;
 	/**
-	 * @doc Use it as an equivalent to Erlang's infinity atom
+	 * Use it as an equivalent to Erlang's infinity atom
 	 */
 	public static final long	INFINITY		= 0;
 
@@ -158,10 +159,11 @@ public abstract class OtpGenServer extends OtpSysProcess {
 	}
 
 	/**
-	 * @doc Sends an asynchronous request to the a gen_server and returns
-	 *      immediately, ignoring if the destination node or gen_server does not
-	 *      exist. The gen_server will call Module:handle_cast/2 to handle the
-	 *      request.
+	 * Sends an asynchronous request to the a gen_server and returns
+	 * immediately, ignoring if the destination node or gen_server does not
+	 * exist. The gen_server will call Module:handle_cast/2 to handle the
+	 * request.
+	 * 
 	 * @param host
 	 *            This node
 	 * @param server
@@ -178,10 +180,11 @@ public abstract class OtpGenServer extends OtpSysProcess {
 	}
 
 	/**
-	 * @doc Sends an asynchronous request to the a gen_server and returns
-	 *      immediately, ignoring if the destination node or gen_server does not
-	 *      exist. The gen_server will call Module:handle_cast/2 to handle the
-	 *      request.
+	 * Sends an asynchronous request to the a gen_server and returns
+	 * immediately, ignoring if the destination node or gen_server does not
+	 * exist. The gen_server will call Module:handle_cast/2 to handle the
+	 * request.
+	 * 
 	 * @param host
 	 *            This node
 	 * @param server

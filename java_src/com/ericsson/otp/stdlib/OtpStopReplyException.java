@@ -3,9 +3,10 @@ package com.ericsson.otp.stdlib;
 import com.ericsson.otp.erlang.OtpErlangObject;
 
 /**
+ * The equivalent to returning {stop, Reason, Reply, state()} on a gen_server's
+ * handle_call/cast/info
+ * 
  * @author Fernando Benavides <elbrujohalcon@inaka.net>
- * @doc The equivalent to returning {stop, Reason, Reply, state()} on a
- *      gen_server's handle_call/cast/info
  */
 public class OtpStopReplyException extends OtpStopException {
 

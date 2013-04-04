@@ -1,9 +1,9 @@
 package com.ericsson.otp.stdlib;
 
 /**
+ * The equivalent to returning {noreply, state()} on a gen_server's handle_call
+ * 
  * @author Fernando Benavides <elbrujohalcon@inaka.net>
- * @doc The equivalent to returning {noreply, state()} on a gen_server's
- *      handle_call
  */
 public class OtpContinueException extends Exception {
 
