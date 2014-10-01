@@ -2,6 +2,15 @@
 
 Erlang stdlib implementation on Java, based on JInterface
 
+# Contact Us
+
+For **questions** or **general comments** regarding the use of this library, please use our public
+[hipchat room](https://www.hipchat.com/gpBpW3SsT).
+
+If you find any **bugs** or have a **problem** while using this library, please [open an issue](https://github.com/inaka/jinterface_stdlib/issues/new) in this repo (or a pull request :)).
+
+And you can check all of our open-source projects at [inaka.github.io](http://inaka.github.io)
+
 # About
 
 [Erlang](http://erlang.org) comes with a very nice java library ([jinterface](http://www.erlang.org/doc/apps/jinterface/)) that let's you _do Erlang stuff_ inside a Java program.
