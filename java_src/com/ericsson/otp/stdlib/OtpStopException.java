@@ -4,7 +4,7 @@ package com.ericsson.otp.stdlib;
  * The equivalent to returning {stop, Reason, state()} on a gen_server's
  * handle_call/cast/info
  * 
- * @author Fernando Benavides <elbrujohalcon@inaka.net>
+ * @author Brujo Benavides &lt;elbrujohalcon@inaka.net&gt;
  */
 public class OtpStopException extends Exception {
 
