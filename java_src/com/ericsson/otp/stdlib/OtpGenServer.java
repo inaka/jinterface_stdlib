@@ -22,7 +22,7 @@ import com.ericsson.otp.erlang.OtpNode;
  * a linked Erlang node, you can use gen_server functions (e.g.
  * gen_server:call/2) with it.
  * 
- * @author Fernando Benavides <elbrujohalcon@inaka.net>
+ * @author Brujo Benavides &lt;elbrujohalcon@inaka.net&gt;
  */
 public abstract class OtpGenServer extends OtpSysProcess {
 	private static final Logger	jlog			= Logger.getLogger(OtpGenServer.class
@@ -222,7 +222,12 @@ public abstract class OtpGenServer extends OtpSysProcess {
 	}
 
 	/**********************************************************************************************/
-
+	/**
+	 * Creates a new server
+	 * 
+	 * @param host
+	 *            This Node
+	 */
 	protected OtpGenServer(OtpNode host) {
 		super(host);
 	}
@@ -330,16 +335,57 @@ public abstract class OtpGenServer extends OtpSysProcess {
 	}
 
 	/**********************************************************************************************/
-
+	/**
+	 * Equivalent to gen_server's handle_call
+	 * 
+	 * @param cmd
+	 *            The message to evaluate
+	 * @param from
+	 *            The caller
+	 * @return The response to be sent to the caller
+	 * 
+	 * @throws OtpStopException
+	 *             If the server should stop normally
+	 * @throws OtpContinueException
+	 *             If the server should not reply anything to the caller
+	 * @throws OtpErlangException
+	 *             If the server should crash
+	 */
 	protected abstract OtpErlangObject handleCall(OtpErlangObject cmd,
 			OtpErlangTuple from) throws OtpStopException, OtpContinueException,
 			OtpErlangException;
 
+	/**
+	 * Equivalent to gen_server's handle_cast
+	 * 
+	 * @param cmd
+	 *            The message to evaluate
+	 * 
+	 * @throws OtpStopException
+	 *             If the server should stop normally
+	 * @throws OtpErlangException
+	 *             If the server should crash
+	 */
 	protected abstract void handleCast(OtpErlangObject cmd)
 			throws OtpStopException, OtpErlangException;
 
+	/**
+	 * Equivalent to gen_server's handle_info
+	 * 
+	 * @param cmd
+	 *            The message received
+	 * 
+	 * @throws OtpStopException
+	 *             If the server should stop normally
+	 */
 	protected abstract void handleInfo(OtpErlangObject cmd)
 			throws OtpStopException;
 
+	/**
+	 * Equivalent to gen_server's terminate
+	 * 
+	 * @param oee
+	 *            The reason for termination
+	 */
 	protected abstract void terminate(OtpErlangException oee);
 }

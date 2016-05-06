@@ -5,7 +5,7 @@ import com.ericsson.otp.erlang.OtpException;
 /**
  * A process with the desired name was already started
  * 
- * @author Fernando Benavides <elbrujohalcon@inaka.net>
+ * @author Brujo Benavides &lt;elbrujohalcon@inaka.net&gt;
  */
 public class OtpAlreadyStartedException extends OtpException {
 
