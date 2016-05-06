@@ -14,7 +14,7 @@ import com.ericsson.otp.erlang.OtpMbox;
 import com.ericsson.otp.erlang.OtpNode;
 
 /**
- * @author Fernando Benavides <elbrujohalcon@inaka.net>
+ * @author Brujo Benavides &lt;elbrujohalcon@inaka.net&gt;
  * 
  */
 public abstract class OtpSysProcess {
